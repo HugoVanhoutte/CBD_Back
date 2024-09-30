@@ -4,7 +4,7 @@ const dbQuery = (query, params) => {
     return new Promise((resolve, reject) => {
         db.query(query, params, (err, result) => {
             if (err) {
-                reject(err);
+                reject(err)
             }
             resolve(result)
         })
