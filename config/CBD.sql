@@ -16,7 +16,8 @@ CREATE TABLE categories
     `id`        BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
     `parent_id` BIGINT DEFAULT null,
     `name`      TINYTEXT NOT NULL,
-    INDEX (parent_id)
+    INDEX (parent_id),
+    CONSTRAINT fk_parent_category FOREIGN KEY (parent_id) REFERENCES categories (id) ON DELETE SET NULL
 );
 
 CREATE TABLE products_categories
@@ -31,7 +32,7 @@ CREATE TABLE products_categories
 
 CREATE TABLE users
 (
-    `id`        BIGINT UNIQUE PRIMARY KEY NOT NULL AUTO_INCREMENT,
+    `id`        BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
     `email`     VARCHAR(255) UNIQUE       NOT NULL,
     `username`  TINYTEXT                  NOT NULL,
     `password`  TINYTEXT                  NOT NULL,
@@ -48,31 +49,3 @@ CREATE TABLE orders
     `products`   JSON   NOT NULL,
     FOREIGN KEY (`user_id`) REFERENCES users (`id`)
 );
-
-
-
-ALTER TABLE categories
-    ADD FOREIGN KEY (`id`) REFERENCES categories (`parent_id`);
-
-CREATE TABLE orders_users
-(
-    `orders_user_id` BIGINT,
-    `users_id`       BIGINT,
-    PRIMARY KEY (`orders_user_id`, `users_id`)
-);
-
-ALTER TABLE orders_users
-    ADD FOREIGN KEY (`orders_user_id`) REFERENCES orders (`id`);
-
-ALTER TABLE orders_users
-    ADD FOREIGN KEY (`users_id`) REFERENCES users (`id`);
-
-
-ALTER TABLE products
-    ADD FOREIGN KEY (`id`) REFERENCES products_categories (`product_id`);
-
-ALTER TABLE categories
-    ADD FOREIGN KEY (`id`) REFERENCES products_categories (`category_id`);
-
-ALTER TABLE categories
-    ADD FOREIGN KEY (parent_id) REFERENCES categories (id);
