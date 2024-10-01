@@ -6,7 +6,7 @@ CREATE TABLE products
 (
     `id`          BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
     `name`        TINYTEXT NOT NULL,
-    `description` text DEFAULT NULL,
+    `description` TEXT DEFAULT NULL,
     `price`        INT      NOT NULL,
     `images`      JSON DEFAULT NULL
 );
@@ -66,7 +66,6 @@ ALTER TABLE orders_users
 
 ALTER TABLE orders_users
     ADD FOREIGN KEY (`users_id`) REFERENCES users (`id`);
-
 
 ALTER TABLE products
     ADD FOREIGN KEY (`id`) REFERENCES products_categories (`product_id`);
