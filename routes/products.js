@@ -4,10 +4,6 @@ const dbQuery = require('../config/dbQuery')
 const checkToken = require("../middleware/checkToken");
 const router = express.Router()
 
-const express = require('express');
-const dbQuery = require('../config/dbQuery');
-const router = express.Router();
-
 /**
  * @swagger
  * /products:
