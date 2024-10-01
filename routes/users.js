@@ -108,6 +108,7 @@ router.post('/register', async (req, res) => {
  * /users/login:
  *   post:
  *     summary: Connexion de l'utilisateur
+ *     description: Permet à un utilisateur de se connecter avec son email et son mot de passe. Si l'utilisateur n'existe pas, il est créé automatiquement.
  *     requestBody:
  *       required: true
  *       content:
@@ -117,51 +118,90 @@ router.post('/register', async (req, res) => {
  *             properties:
  *               email:
  *                 type: string
+ *                 description: L'email de l'utilisateur
  *                 example: "Toto@example.com"
  *               password:
  *                 type: string
+ *                 description: Le mot de passe de l'utilisateur
  *                 example: "password123"
  *     responses:
  *       200:
- *         description: Utilisateur connecté avec succès
+ *         description: Connexion réussie
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 message:
  *                   type: string
- *                   example: "<JWT_TOKEN>"
+ *                   example: "Connexion réussie"
+ *       201:
+ *         description: Utilisateur créé et connecté
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Utilisateur créé avec succès"
  *       401:
- *         description: Email ou mot de passe incorrect
+ *         description: Identifiants invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Identifiants invalides"
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur interne du serveur"
  */
-router.post('/login', async (req, res) => {
+
+router.post('/login', (req, res) => {
     const { email, password } = req.body;
 
-    const sql = 'SELECT * FROM users WHERE email = ?';
-    db.query(sql, [email], async (err, results) => {
-        if (err) return res.status(500).send(err);
-
-        if (results.length === 0) return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
-
-        const user = results[0];
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
-
-        const token = jwt.sign(
-            {
-                id: user.id,
-                email: user.email,
-                role: user.role
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        res.status(200).json({ message: 'Utilisateur connecté', token: token });
-    });
+    // Vérification de l'existence de l'utilisateur
+    const selectSql = 'SELECT * FROM users WHERE email = ?';
+    dbQuery(selectSql, [email])
+        .then(async (results) => {
+            if (results.length > 0) {
+                // L'utilisateur existe, vérification du mot de passe
+                const user = results[0];
+                const passwordMatch = await bcrypt.compare(password, user.password);
+                if (passwordMatch) {
+                    res.status(200).json({ message: 'Connexion réussie' }); // Connexion réussie
+                } else {
+                    res.status(401).json({ error: 'Identifiants invalides' }); // Mauvais mot de passe
+                }
+            } else {
+                // L'utilisateur n'existe pas, création automatique
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const insertSql = 'INSERT INTO users (email, password) VALUES (?, ?)';
+                dbQuery(insertSql, [email, hashedPassword])
+                    .then(() => {
+                        res.status(201).json({ message: 'Utilisateur créé avec succès' }); // Utilisateur créé
+                    })
+                    .catch((error) => {
+                        res.status(500).json({ error: error.message }); // Erreur serveur lors de la création
+                    });
+            }
+        })
+        .catch((error) => {
+            res.status(500).json({ error: error.message }); // Erreur serveur lors de la sélection
+        });
 });
+
+module.exports = router;
 
 /**
  * @swagger
