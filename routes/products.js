@@ -1,5 +1,6 @@
 const express = require('express')
 const dbQuery = require('../config/dbQuery')
+const checkToken = require("../middleware/checkToken");
 const router = express.Router()
 
 router.get('/', (req, res) => {
@@ -21,6 +22,11 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/new', async (req, res) => {
+    try {
+        checkToken(req.body.token)
+    } catch (error) {
+        throw error
+    }
     const product = req.body.product
     const values = [product.name, product.description, product.price, product.images]
     const sql = "INSERT INTO products (name, description, price, images) VALUES (?,?,?,?)"
@@ -32,6 +38,11 @@ router.post('/new', async (req, res) => {
 })
 
 router.delete('/delete/:id', async (req, res) => {
+    try {
+        checkToken(req.body.token)
+    } catch (error) {
+        throw error
+    }
     const sql = 'DELETE FROM products WHERE id = ?'
     dbQuery(sql, [req.params.id]).then((results) => {
         results.affectedRows === 0 ? res.sendStatus(404) : res.sendStatus(200)
