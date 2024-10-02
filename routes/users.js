@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const bcrypt = require('bcrypt');
-const mysql = require('mysql2');
-const jwt = require('jsonwebtoken');
+const express = require('express')
+const router = express.Router()
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 const dbQuery = require('../config/dbQuery')
+const {compare} = require("bcrypt");
 
 
 /**
@@ -40,23 +40,15 @@ const dbQuery = require('../config/dbQuery')
  *                     type: string
  *                     example: "2024-09-02T07:11:31.000Z"
  */
+
 router.get('/', (req, res) => {
-    const sql = 'SELECT * FROM users';
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).send(err);
-
-        const users = results.map(user => ({
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            firstname: user.firstname,
-            role: user.role,
-            created_at: user.created_at
-        }));
-
-        res.status(200).json(users);
-    });
-});
+    const sql = 'SELECT id, email, username, role, basket, favorites FROM users'
+    dbQuery(sql, [req.params.id]).then((results) => {
+        res.status(200).json(results)
+    }).catch((error)=>{
+        res.status(500).send({'error': error.message})
+    })
+})
 
 /**
  * @swagger
@@ -90,17 +82,15 @@ router.get('/', (req, res) => {
  *         description: Utilisateur créé avec succès
  */
 router.post('/register', async (req, res) => {
-    console.log(req.body)
-    const { email, password, name, firstname, role } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const { email, password, username } = req.body.user
+    const hashedPassword = await bcrypt.hash(password, 10)
 
-    const sql = 'INSERT INTO users (email, password, name, firstname, role) VALUES (?, ?, ?, ?, ?)';
-    dbQuery(sql, [email, hashedPassword, name, firstname, role]).then(() => {
+    const sql = 'INSERT INTO users (email, password, username) VALUES (?, ?, ?)';
+    dbQuery(sql, [email, hashedPassword, username]).then(() => {
         res.sendStatus(201)
     }).catch((error) => {
         res.status(500).send({'error':error.message})
     })
- 
 });
 
 /**
@@ -166,39 +156,34 @@ router.post('/register', async (req, res) => {
  *                   type: string
  *                   example: "Erreur interne du serveur"
  */
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body.user
 
-router.post('/login', (req, res) => {
-    const { email, password } = req.body;
+    const sql = 'SELECT * FROM users WHERE email = ?'
+    dbQuery(sql, [email]).then(async (results) => {
+        if (results.length === 0) {
+            res.status(401).send({'error': 'Email ou mot de passe incorrect'})
+        }
+        const user = results[0]
+        if(!compare(password, user.password)) {
+            res.sendStatus(401)
+        }
 
-    // Vérification de l'existence de l'utilisateur
-    const selectSql = 'SELECT * FROM users WHERE email = ?';
-    dbQuery(selectSql, [email])
-        .then(async (results) => {
-            if (results.length > 0) {
-                // L'utilisateur existe, vérification du mot de passe
-                const user = results[0];
-                const passwordMatch = await bcrypt.compare(password, user.password);
-                if (passwordMatch) {
-                    res.status(200).json({ message: 'Connexion réussie' }); // Connexion réussie
-                } else {
-                    res.status(401).json({ error: 'Identifiants invalides' }); // Mauvais mot de passe
-                }
-            } else {
-                // L'utilisateur n'existe pas, création automatique
-                const hashedPassword = await bcrypt.hash(password, 10);
-                const insertSql = 'INSERT INTO users (email, password) VALUES (?, ?)';
-                dbQuery(insertSql, [email, hashedPassword])
-                    .then(() => {
-                        res.status(201).json({ message: 'Utilisateur créé avec succès' }); // Utilisateur créé
-                    })
-                    .catch((error) => {
-                        res.status(500).json({ error: error.message }); // Erreur serveur lors de la création
-                    });
-            }
-        })
-        .catch((error) => {
-            res.status(500).json({ error: error.message }); // Erreur serveur lors de la sélection
-        });
+        const token = jwt.sign(
+            {
+                id: user.id,
+                email: user.email,
+                role: user.role
+            },
+            process.env.JWT_SECRET
+        )
+
+        res.status(200).json({token: token})
+    }).catch((error)=>{
+        res.status(500).send({'error': error.message})
+
+    })
+
 });
 
 module.exports = router;
@@ -228,12 +213,16 @@ module.exports = router;
  *                   type: string
  *                   example: "user"
  */
-router.get('/profile', (req, res) => {
-    res.status(200).json({
-        id: req.user.id,
-        email: req.user.email,
-        role: req.user.role
-    });
-});
+router.get('/:id', (req, res) => {
+    const sql = 'SELECT id, email, username, role, basket, favorites FROM users WHERE id = ?'
+    dbQuery(sql, [req.params.id]).then((results) => {
+        res.status(200).json(results[0])
+    }).catch((error) => {
+        res.status(500).send({'error': error.message})
+    })
+})
+
+
+//TODO: Update Swagger
 
 module.exports = router;
