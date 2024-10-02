@@ -1,7 +1,7 @@
 
 const express = require('express')
 const dbQuery = require('../config/dbQuery')
-const checkToken = require("../middleware/checkToken");
+const checkToken = require("../middleware/checkToken")
 const router = express.Router()
 
 /**
@@ -125,7 +125,7 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Erreur serveur
  */
-router.post('/new', async (req, res) => {
+router.post('/', async (req, res) => {
     /*
     try {
         checkToken(req.body.token)
@@ -164,7 +164,7 @@ router.post('/new', async (req, res) => {
  *       500:
  *         description: Erreur serveur
  */
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     /*
     try {
         checkToken(req.body.token)
@@ -223,7 +223,7 @@ router.delete('/delete/:id', async (req, res) => {
  *       500:
  *         description: Erreur serveur
  */
-router.put('/update/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     const product = req.body.product;
     const values = [product.name, product.description, product.price, product.images, req.params.id];
     const sql = 'UPDATE products SET name = ?, description = ?, price = ?, images = ? WHERE id = ?';
@@ -233,5 +233,7 @@ router.put('/update/:id', async (req, res) => {
         res.status(500).send({'error': error.message});
     });
 });
+
+router.get('/')
 
 module.exports = router;
