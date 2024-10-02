@@ -6,8 +6,8 @@ CREATE TABLE products
 (
     `id`          BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
     `name`        TINYTEXT NOT NULL,
-    `description` text DEFAULT NULL,
-    `price`        INT      NOT NULL,
+    `description` TEXT DEFAULT NULL,
+    `price`       INT      NOT NULL,
     `images`      JSON DEFAULT NULL
 );
 
