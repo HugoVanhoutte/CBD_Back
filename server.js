@@ -20,11 +20,11 @@ const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
         info: {
-            title: 'API Quiz',
+            title: 'API CBD',
             version: '0.0.1',
             description: 'Une API pour gérer les utilisateurs et les produits',
             contact: {
-                name: 'Tayeb',
+                name: 'Hugo',
             },
             servers: [{ url: 'http://localhost:3000' }],
         },
