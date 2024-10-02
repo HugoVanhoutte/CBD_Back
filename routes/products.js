@@ -1,8 +1,9 @@
-
 const express = require('express')
 const dbQuery = require('../config/dbQuery')
-const checkToken = require("../middleware/checkToken");
+const checkToken = require("../middleware/checkToken")
 const router = express.Router()
+
+//TODO: Mettre a jour swagger (changement dans les routes
 
 /**
  * @swagger
@@ -86,7 +87,7 @@ router.get('/', (req, res) => {
 router.get('/:id', async (req, res) => {
     const sql = 'SELECT * FROM products WHERE id = ?';
     dbQuery(sql, [req.params.id]).then((results) => {
-        res.status(200).json(results);
+        res.status(200).json(results[0]);
     }).catch((error) => {
         res.status(500).send({'error': error.message});
     });
@@ -125,7 +126,7 @@ router.get('/:id', async (req, res) => {
  *       500:
  *         description: Erreur serveur
  */
-router.post('/new', async (req, res) => {
+router.post('/', async (req, res) => {
     /*
     try {
         checkToken(req.body.token)
@@ -164,7 +165,7 @@ router.post('/new', async (req, res) => {
  *       500:
  *         description: Erreur serveur
  */
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     /*
     try {
         checkToken(req.body.token)
@@ -210,8 +211,8 @@ router.delete('/delete/:id', async (req, res) => {
  *                     type: string
  *                     example: "Nouvelle description"
  *                   price:
- *                     type: number
- *                     example: 149.99
+ *                     type: integer
+ *                     example: 14999
  *                   images:
  *                     type: string
  *                     example: "new-image-url.jpg"
@@ -223,7 +224,7 @@ router.delete('/delete/:id', async (req, res) => {
  *       500:
  *         description: Erreur serveur
  */
-router.put('/update/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     const product = req.body.product;
     const values = [product.name, product.description, product.price, product.images, req.params.id];
     const sql = 'UPDATE products SET name = ?, description = ?, price = ?, images = ? WHERE id = ?';
@@ -234,4 +235,4 @@ router.put('/update/:id', async (req, res) => {
     });
 });
 
-module.exports = router;
+module.exports = router

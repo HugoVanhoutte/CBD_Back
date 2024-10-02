@@ -98,6 +98,7 @@ router.post('/register', async (req, res) => {
  * /users/login:
  *   post:
  *     summary: Connexion de l'utilisateur
+ *     description: Permet à un utilisateur de se connecter avec son email et son mot de passe. Si l'utilisateur n'existe pas, il est créé automatiquement.
  *     requestBody:
  *       required: true
  *       content:
@@ -107,23 +108,53 @@ router.post('/register', async (req, res) => {
  *             properties:
  *               email:
  *                 type: string
+ *                 description: L'email de l'utilisateur
  *                 example: "Toto@example.com"
  *               password:
  *                 type: string
+ *                 description: Le mot de passe de l'utilisateur
  *                 example: "password123"
  *     responses:
  *       200:
- *         description: Utilisateur connecté avec succès
+ *         description: Connexion réussie
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 message:
  *                   type: string
- *                   example: "<JWT_TOKEN>"
+ *                   example: "Connexion réussie"
+ *       201:
+ *         description: Utilisateur créé et connecté
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Utilisateur créé avec succès"
  *       401:
- *         description: Email ou mot de passe incorrect
+ *         description: Identifiants invalides
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Identifiants invalides"
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Erreur interne du serveur"
  */
 router.post('/login', async (req, res) => {
     const { email, password } = req.body.user
@@ -152,7 +183,10 @@ router.post('/login', async (req, res) => {
         res.status(500).send({'error': error.message})
 
     })
+
 });
+
+module.exports = router;
 
 /**
  * @swagger
