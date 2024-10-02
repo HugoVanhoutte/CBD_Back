@@ -14,6 +14,9 @@ app.use("/api/products", productsRoutes)
 const usersRoutes = require('./routes/users')
 app.use("/api/users", usersRoutes)
 
+const categoriesRoutes = require('./routes/categories')
+app.use("/api/categories", categoriesRoutes)
+
 const port = process.env.PORT || 3333
 
 app.listen(port, () => {
