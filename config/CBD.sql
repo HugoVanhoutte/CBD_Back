@@ -49,11 +49,3 @@ CREATE TABLE orders
     FOREIGN KEY (`user_id`) REFERENCES users (`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE orders_users
-(
-    `orders_user_id` BIGINT,
-    `users_id`       BIGINT,
-    PRIMARY KEY (`orders_user_id`, `users_id`),
-    FOREIGN KEY (`orders_user_id`) REFERENCES orders (`id`),
-    FOREIGN KEY (`users_id`) REFERENCES users (`id`)
-) ENGINE = InnoDB;
