@@ -1,22 +1,59 @@
-require('dotenv').config()
-const express = require('express')
+require('dotenv').config(); 
+const swaggerJsDoc = require('swagger-jsdoc')
+const swaggerUi = require('swagger-ui-express')
+const express = require('express');
 const bodyParser = require('body-parser')
-const app = express()
+const mysql = require('mysql2')
+const app = express();
 app.use(bodyParser.json())
-const cors = require('cors')
+const cors = require('cors');
 app.use(cors())
 
+// Middleware pour le parsing du body en JSON
+app.use(bodyParser.json());
 
-//Routes
-const productsRoutes = require('./routes/products')
-app.use("/api/products", productsRoutes)
+// Middleware pour activer le CORS
+app.use(cors({ origin: "http://localhost:8080" }));
 
-const usersRoutes = require('./routes/users')
-app.use("/api/users", usersRoutes)
+// Configuration Swagger
+const swaggerOptions = {
+    swaggerDefinition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'API CBD',
+            version: '0.0.1',
+            description: 'Une API pour gérer les utilisateurs et les produits',
+            contact: {
+                name: 'Hugo',
+            },
+            servers: [{ url: 'http://localhost:3000' }],
+        },
+    },
+    apis: ["./routes/*.js"], // Les routes à documenter dans Swagger
+};
+
+const ordersRoutes = require('./routes/orders')
+app.use("/api/orders", ordersRoutes)
 
 const port = process.env.PORT || 3333
+// Génération de la documentation Swagger
+const swaggerDocs = swaggerJsDoc(swaggerOptions)
 
+// Route pour accéder à la documentation Swagger
+app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+// Import des routes
+const productsRoutes = require('./routes/products');
+const usersRoutes = require('./routes/users');
+
+// Utilisation des routes dans l'application
+app.use("/api/products", productsRoutes);
+app.use("/api/users", usersRoutes);
+
+// Définition du port sur lequel le serveur écoute
+const port = process.env.PORT || 3333;
+
+// Démarrage du serveur
 app.listen(port, () => {
-    console.log(('Server started on port ' + port))
-})
-
+    console.log('Server started on port ' + port);
+});

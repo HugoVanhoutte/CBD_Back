@@ -1,8 +1,9 @@
-
 const express = require('express')
 const dbQuery = require('../config/dbQuery')
 const checkToken = require("../middleware/checkToken")
 const router = express.Router()
+
+//TODO: Mettre a jour swagger (changement dans les routes
 
 /**
  * @swagger
@@ -86,7 +87,7 @@ router.get('/', (req, res) => {
 router.get('/:id', async (req, res) => {
     const sql = 'SELECT * FROM products WHERE id = ?';
     dbQuery(sql, [req.params.id]).then((results) => {
-        res.status(200).json(results);
+        res.status(200).json(results[0]);
     }).catch((error) => {
         res.status(500).send({'error': error.message});
     });
@@ -210,8 +211,8 @@ router.delete('/:id', async (req, res) => {
  *                     type: string
  *                     example: "Nouvelle description"
  *                   price:
- *                     type: number
- *                     example: 149.99
+ *                     type: integer
+ *                     example: 14999
  *                   images:
  *                     type: string
  *                     example: "new-image-url.jpg"
@@ -234,6 +235,6 @@ router.put('/:id', async (req, res) => {
     });
 });
 
-router.get('/')
 
-module.exports = router;
+module.exports = router
+
