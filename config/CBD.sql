@@ -7,18 +7,24 @@ CREATE TABLE products
     `id`          BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
     `name`        TINYTEXT NOT NULL,
     `description` TEXT DEFAULT NULL,
+
+
     `price`       INT      NOT NULL,
+
     `images`      JSON DEFAULT NULL
-);
+) ENGINE = InnoDB;
 
 CREATE TABLE categories
 (
     `id`        BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
-    `parent_id` BIGINT DEFAULT null,
+    `parent_id` BIGINT DEFAULT NULL,
     `name`      TINYTEXT NOT NULL,
     INDEX (parent_id),
-    CONSTRAINT fk_parent_category FOREIGN KEY (parent_id) REFERENCES categories (id) ON DELETE SET NULL
-);
+
+    FOREIGN KEY (parent_id) REFERENCES categories(id)
+) ENGINE = InnoDB;
+
+
 
 CREATE TABLE products_categories
 (
@@ -27,25 +33,29 @@ CREATE TABLE products_categories
     `category_id` BIGINT NOT NULL,
     FOREIGN KEY (`product_id`) REFERENCES products (`id`),
     FOREIGN KEY (`category_id`) REFERENCES categories (`id`)
-
-);
+) ENGINE = InnoDB;
 
 CREATE TABLE users
 (
     `id`        BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
-    `email`     VARCHAR(255) UNIQUE       NOT NULL,
-    `username`  TINYTEXT                  NOT NULL,
-    `password`  TINYTEXT                  NOT NULL,
+
+    `email`     VARCHAR(255) UNIQUE NOT NULL,
+    `username`  TINYTEXT NOT NULL,
+    `password`  TINYTEXT NOT NULL,
+
     `role`      ENUM ('admin', 'user') DEFAULT 'user',
-    `basket`    JSON                   DEFAULT null,
-    `favorites` JSON                   DEFAULT null
-);
+    `basket`    JSON DEFAULT NULL,
+    `favorites` JSON DEFAULT NULL
+) ENGINE = InnoDB;
 
 CREATE TABLE orders
 (
     `id`         BIGINT PRIMARY KEY AUTO_INCREMENT,
     `user_id`    BIGINT NOT NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    `products`   JSON   NOT NULL,
+    `products`   JSON NOT NULL,
     FOREIGN KEY (`user_id`) REFERENCES users (`id`)
-);
+
+) ENGINE = InnoDB;
+
+
