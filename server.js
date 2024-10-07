@@ -35,6 +35,9 @@ const swaggerOptions = {
 const ordersRoutes = require('./routes/orders')
 app.use("/api/orders", ordersRoutes)
 
+const categoriesRoutes = require('./routes/categories')
+app.use("/api/categories", categoriesRoutes)
+
 const port = process.env.PORT || 3333
 // Génération de la documentation Swagger
 const swaggerDocs = swaggerJsDoc(swaggerOptions)
