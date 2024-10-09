@@ -1,7 +1,7 @@
 CREATE DATABASE StoneLand;
 
 USE StoneLand;
-
+-- TODO: Add concentration to product: cf maquette
 CREATE TABLE products
 (
     `id`          BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
@@ -13,7 +13,7 @@ CREATE TABLE products
 
     `images`      JSON DEFAULT NULL
 ) ENGINE = InnoDB;
-
+-- TODO: Add colors to categories
 CREATE TABLE categories
 (
     `id`        BIGINT UNIQUE PRIMARY KEY AUTO_INCREMENT,
