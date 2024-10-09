@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const dbQuery = require('../config/dbQuery')
 const {compare} = require("bcrypt");
+const checkToken = require("../middleware/checkToken");
 
 
 /**
@@ -42,12 +43,17 @@ const {compare} = require("bcrypt");
  */
 
 router.get('/', (req, res) => {
-    const sql = 'SELECT id, email, username, role, basket, favorites FROM users'
-    dbQuery(sql, [req.params.id]).then((results) => {
-        res.status(200).json(results)
-    }).catch((error)=>{
-        res.status(500).send({'error': error.message})
-    })
+    const decoded = checkToken(req.body.token)
+    if (decoded.role !== 'admin') {
+        res.status(403).send({'error': 'User is not admin'})
+    } else {
+        const sql = 'SELECT id, email, username, role, basket, favorites FROM users'
+        dbQuery(sql, [req.params.id]).then((results) => {
+            res.status(200).json(results)
+        }).catch((error) => {
+            res.status(500).send({'error': error.message})
+        })
+    }
 })
 
 /**
@@ -85,7 +91,7 @@ router.post('/register', async (req, res) => {
     const { email, password, username } = req.body.user
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const sql = 'INSERT INTO users (email, password, username) VALUES (?, ?, ?)';
+    const sql = 'INSERT INTO users (email, password, username) VALUES (?, ?, ?)'
     dbQuery(sql, [email, hashedPassword, username]).then(() => {
         res.sendStatus(201)
     }).catch((error) => {
@@ -186,8 +192,6 @@ router.post('/login', async (req, res) => {
 
 });
 
-module.exports = router;
-
 /**
  * @swagger
  * /users/profile:
@@ -214,15 +218,28 @@ module.exports = router;
  *                   example: "user"
  */
 router.get('/:id', (req, res) => {
-    const sql = 'SELECT id, email, username, role, basket, favorites FROM users WHERE id = ?'
-    dbQuery(sql, [req.params.id]).then((results) => {
-        res.status(200).json(results[0])
-    }).catch((error) => {
+    const decoded = checkToken(req.body.token)
+    if (decoded.role !== 'admin') {
+        res.status(403).send({'error': 'User is not admin'})
+    } else {
+        const sql = 'SELECT id, email, username, role, basket, favorites FROM users WHERE id = ?'
+        dbQuery(sql, [req.params.id]).then((results) => {
+            res.status(200).json(results[0])
+        }).catch((error) => {
+            res.status(500).send({'error': error.message})
+        })
+    }
+})
+
+router.put('/:id', (req, res) => {
+    console.log(req.body)
+    const sql = 'UPDATE users SET basket = ?, favorites = ? WHERE id = ?';
+    dbQuery(sql, [req.body.user.basket, req.body.user.favorites, req.params.id]).then(() => {
+        res.sendStatus(200)
+    }). catch((error) => {
         res.status(500).send({'error': error.message})
     })
 })
-
-
 //TODO: Update Swagger
 
 module.exports = router;
