@@ -184,7 +184,14 @@ router.post('/login', async (req, res) => {
             process.env.JWT_SECRET
         )
 
-        res.status(200).json({token: token})
+        res.status(200).json({token: token, user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                role: user.role,
+                basket: user.basket,
+                favorites: user.favorites,
+            }})
     }).catch((error)=>{
         res.status(500).send({'error': error.message})
 
@@ -232,9 +239,8 @@ router.get('/:id', (req, res) => {
 })
 
 router.put('/:id', (req, res) => {
-    console.log(req.body)
     const sql = 'UPDATE users SET basket = ?, favorites = ? WHERE id = ?';
-    dbQuery(sql, [req.body.user.basket, req.body.user.favorites, req.params.id]).then(() => {
+    dbQuery(sql, [JSON.stringify(req.body.user.basket), JSON.stringify(req.body.user.favorites), req.params.id]).then(() => {
         res.sendStatus(200)
     }). catch((error) => {
         res.status(500).send({'error': error.message})
