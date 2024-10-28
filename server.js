@@ -1,19 +1,16 @@
-require('dotenv').config(); 
+require('dotenv').config();
 const swaggerJsDoc = require('swagger-jsdoc')
 const swaggerUi = require('swagger-ui-express')
 const express = require('express');
-const bodyParser = require('body-parser')
-const mysql = require('mysql2')
+const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json())
 const cors = require('cors');
-app.use(cors())
+app.use(cors("http://0.0.1.48:8080"))
 
-// Middleware pour le parsing du body en JSON
-app.use(bodyParser.json());
 
 // Middleware pour activer le CORS
-app.use(cors({ origin: "http://localhost:8080" }));
+// app.use(cors({ origin: "http://0.0.1.48:8080" }));
 
 // Configuration Swagger
 const swaggerOptions = {
@@ -26,7 +23,7 @@ const swaggerOptions = {
             contact: {
                 name: 'Hugo',
             },
-            servers: [{ url: 'http://localhost:3000' }],
+            servers: [{ url: 'http://10.0.1.48:3000' }],
         },
     },
     apis: ["./routes/*.js"], // Les routes à documenter dans Swagger
@@ -55,6 +52,6 @@ app.use("/api/users", usersRoutes);
 const port = process.env.PORT || 3333;
 
 // Démarrage du serveur
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
     console.log('Server started on port ' + port);
 });
