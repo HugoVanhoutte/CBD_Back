@@ -43,16 +43,18 @@ const checkToken = require("../middleware/checkToken");
  */
 
 router.get('/', (req, res) => {
-    const decoded = checkToken(req.body.token)
+    const decoded = checkToken(req.headers.authorization)
     if (decoded.role !== 'admin') {
         res.status(403).send({'error': 'User is not admin'})
     } else {
         const sql = 'SELECT id, email, username, role, basket, favorites FROM users'
-        dbQuery(sql, [req.params.id]).then((results) => {
-            res.status(200).json(results)
-        }).catch((error) => {
-            res.status(500).send({'error': error.message})
-        })
+        dbQuery(sql, [req.params.id])
+            .then((results) => {
+                res.status(200).json(results)
+            })
+            .catch((error) => {
+                res.status(500).send({'error': error.message})
+            })
     }
 })
 
@@ -88,15 +90,17 @@ router.get('/', (req, res) => {
  *         description: Utilisateur créé avec succès
  */
 router.post('/register', async (req, res) => {
-    const { email, password, username } = req.body.user
+    const {email, password, username} = req.body.user
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const sql = 'INSERT INTO users (email, password, username) VALUES (?, ?, ?)'
-    dbQuery(sql, [email, hashedPassword, username]).then(() => {
-        res.sendStatus(201)
-    }).catch((error) => {
-        res.status(500).send({'error':error.message})
-    })
+    dbQuery(sql, [email, hashedPassword, username])
+        .then(() => {
+            res.sendStatus(201)
+        })
+        .catch((error) => {
+            res.status(500).send({'error': error.message})
+        })
 });
 
 /**
@@ -163,32 +167,44 @@ router.post('/register', async (req, res) => {
  *                   example: "Erreur interne du serveur"
  */
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body.user
+    const {email, password} = req.body.user
 
     const sql = 'SELECT * FROM users WHERE email = ?'
-    dbQuery(sql, [email]).then(async (results) => {
-        if (results.length === 0) {
-            res.status(401).send({'error': 'Email ou mot de passe incorrect'})
-        }
-        const user = results[0]
-        if(!compare(password, user.password)) {
-            res.sendStatus(401)
-        }
+    dbQuery(sql, [email])
+        .then(async (results) => {
+            if (results.length === 0) {
+                res.status(401).send({'error': 'Email ou mot de passe incorrect'})
+            }
+            const user = results[0]
+            if (!compare(password, user.password)) {
+                res.sendStatus(401)
+            }
 
-        const token = jwt.sign(
-            {
-                id: user.id,
-                email: user.email,
-                role: user.role
-            },
-            process.env.JWT_SECRET
-        )
+            const token = jwt.sign(
+                {
+                    id: user.id,
+                    email: user.email,
+                    role: user.role,
+                },
+                process.env.JWT_SECRET
+            )
 
-        res.status(200).json({token: token})
-    }).catch((error)=>{
-        res.status(500).send({'error': error.message})
+            res.status(200).json({
+                token: token,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    username: user.username,
+                    role: user.role,
+                    basket: user.basket,
+                    favorites: user.favorites,
+                }
+            })
+        })
+        .catch((error) => {
+            res.status(500).send({'error': error.message})
 
-    })
+        })
 
 });
 
@@ -218,28 +234,30 @@ router.post('/login', async (req, res) => {
  *                   example: "user"
  */
 router.get('/:id', (req, res) => {
-    const decoded = checkToken(req.body.token)
-    if (decoded.role !== 'admin') {
-        res.status(403).send({'error': 'User is not admin'})
+    const decoded = checkToken(req.headers.authorization)
+    if (!(decoded.role === 'admin') && !(decoded.id === Number(req.params.id))) {
+        res.sendStatus(403)
     } else {
         const sql = 'SELECT id, email, username, role, basket, favorites FROM users WHERE id = ?'
-        dbQuery(sql, [req.params.id]).then((results) => {
-            res.status(200).json(results[0])
-        }).catch((error) => {
-            res.status(500).send({'error': error.message})
-        })
+        dbQuery(sql, [req.params.id])
+            .then((results) => {
+                res.status(200).json(JSON.stringify(results[0]))
+            })
+            .catch((error) => {
+                res.status(500).send({'error': error.message})
+            })
     }
 })
 
 router.put('/:id', (req, res) => {
-    console.log(req.body)
     const sql = 'UPDATE users SET basket = ?, favorites = ? WHERE id = ?';
-    dbQuery(sql, [req.body.user.basket, req.body.user.favorites, req.params.id]).then(() => {
-        res.sendStatus(200)
-    }). catch((error) => {
-        res.status(500).send({'error': error.message})
-    })
+    dbQuery(sql, [JSON.stringify(req.body.user.basket), JSON.stringify(req.body.user.favorites), req.params.id])
+        .then(() => {
+            res.sendStatus(200)
+        })
+        .catch((error) => {
+            res.status(500).send({'error': error.message})
+        })
 })
-//TODO: Update Swagger
 
 module.exports = router;

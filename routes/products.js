@@ -3,8 +3,6 @@ const dbQuery = require('../config/dbQuery')
 const checkToken = require("../middleware/checkToken")
 const router = express.Router()
 
-//TODO: Mettre a jour swagger (changement dans les routes
-
 /**
  * @swagger
  * /products:
@@ -38,11 +36,13 @@ const router = express.Router()
  */
 router.get('/', (req, res) => {
     const sql = 'SELECT * FROM products'
-    dbQuery(sql).then((results) => {
-        res.status(200).json(results)
-    }).catch((error) => {
-        res.status(500).send({'error': error.message})
-    });
+    dbQuery(sql)
+        .then((results) => {
+            res.status(200).json(results)
+        })
+        .catch((error) => {
+            res.status(500).send({'error': error.message})
+        });
 });
 
 /**
@@ -86,11 +86,13 @@ router.get('/', (req, res) => {
  */
 router.get('/:id', async (req, res) => {
     const sql = 'SELECT * FROM products WHERE id = ?'
-    dbQuery(sql, [req.params.id]).then((results) => {
-        res.status(200).json(results[0]);
-    }).catch((error) => {
-        res.status(500).send({'error': error.message})
-    });
+    dbQuery(sql, [req.params.id])
+        .then((results) => {
+            res.status(200).json(results[0]);
+        })
+        .catch((error) => {
+            res.status(500).send({'error': error.message})
+        });
 });
 
 /**
@@ -127,18 +129,20 @@ router.get('/:id', async (req, res) => {
  *         description: Erreur serveur
  */
 router.post('/', async (req, res) => {
-    const decoded = checkToken(req.body.token)
+    const decoded = checkToken(req.headers.authorization)
     if (decoded.role !== 'admin') {
         res.sendStatus(403)
     } else {
         const product = req.body.product
         const values = [product.name, product.description, product.price, product.images]
         const sql = "INSERT INTO products (name, description, price, images) VALUES (?,?,?,?)"
-        dbQuery(sql, values).then(() => {
-            res.sendStatus(201)
-        }).catch((error) => {
-            res.status(500).send({'error': error.message})
-        });
+        dbQuery(sql, values)
+            .then(() => {
+                res.sendStatus(201)
+            })
+            .catch((error) => {
+                res.status(500).send({'error': error.message})
+            });
     }
 });
 
@@ -164,16 +168,18 @@ router.post('/', async (req, res) => {
  *         description: Erreur serveur
  */
 router.delete('/:id', async (req, res) => {
-    const decoded = checkToken(req.body.token)
+    const decoded = checkToken(req.headers.authorization)
     if (decoded.role !== 'admin') {
         res.sendStatus(403)
     } else {
         const sql = 'DELETE FROM products WHERE id = ?'
-        dbQuery(sql, [req.params.id]).then((results) => {
-            results.affectedRows === 0 ? res.sendStatus(404) : res.sendStatus(200)
-        }).catch((error) => {
-            res.status(500).send({'error': error.message})
-        })
+        dbQuery(sql, [req.params.id])
+            .then((results) => {
+                results.affectedRows === 0 ? res.sendStatus(404) : res.sendStatus(200)
+            })
+            .catch((error) => {
+                res.status(500).send({'error': error.message})
+            })
     }
 })
 
@@ -221,18 +227,20 @@ router.delete('/:id', async (req, res) => {
  *         description: Erreur serveur
  */
 router.put('/:id', async (req, res) => {
-    const decoded = checkToken(req.body.token)
+    const decoded = checkToken(req.headers.authorization)
     if (decoded.role !== 'admin') {
         res.sendStatus(403)
     } else {
         const product = req.body.product;
         const values = [product.name, product.description, product.price, product.images, req.params.id]
         const sql = 'UPDATE products SET name = ?, description = ?, price = ?, images = ? WHERE id = ?'
-        dbQuery(sql, values).then((results) => {
-            results.length === 0 ? res.sendStatus(404) : res.sendStatus(200)
-        }).catch((error) => {
-            res.status(500).send({'error': error.message})
-        })
+        dbQuery(sql, values)
+            .then((results) => {
+                results.length === 0 ? res.sendStatus(404) : res.sendStatus(200)
+            })
+            .catch((error) => {
+                res.status(500).send({'error': error.message})
+            })
     }
 })
 
@@ -240,47 +248,55 @@ router.put('/:id', async (req, res) => {
 router.get('/category/:id', async (req, res) => {
     const sql = "SELECT product_id FROM products_categories WHERE category_id = ?"
     const response = []
-    await dbQuery(sql, [req.params.id]).then(async (results) => {
-        for (const result of results) {
-            const sqlEachProduct = "SELECT * FROM products WHERE id = ?"
-            await dbQuery(sqlEachProduct, [result.product_id]).then(async (resultsEachProduct) => {
-                response.push(resultsEachProduct[0])
-            }).catch((error) => {
-                res.status(500).send({'error': error.message})
-            })
-        }
-        res.status(200).json(response)
-    }).catch((error) => {
-        res.status(500).send({'error': error.message})
-    })
+    await dbQuery(sql, [req.params.id])
+        .then(async (results) => {
+            for (const result of results) {
+                const sqlEachProduct = "SELECT * FROM products WHERE id = ?"
+                await dbQuery(sqlEachProduct, [result.product_id])
+                    .then(async (resultsEachProduct) => {
+                        response.push(resultsEachProduct[0])
+                    })
+                    .catch((error) => {
+                        res.status(500).send({'error': error.message})
+                    })
+            }
+            res.status(200).json(response)
+        })
+        .catch((error) => {
+            res.status(500).send({'error': error.message})
+        })
 })
 //Sets a category for a product (both id)
 router.post('/set_category/:id', async (req, res) => {
-    const decoded = checkToken(req.body.token)
+    const decoded = checkToken(req.headers.authorization)
     if (decoded.role !== 'admin') {
         res.sendStatus(403)
     } else {
         const sql = "INSERT INTO products_categories (product_id, category_id) VALUES (?,?)"
-        dbQuery(sql, [req.params.id, req.body.category_id]).then(async () => {
-            res.sendStatus(201)
-        }).catch((error) => {
-            res.status(500).send({'error': error.message})
-        })
+        dbQuery(sql, [req.params.id, req.body.category_id])
+            .then(async () => {
+                res.sendStatus(201)
+            })
+            .catch((error) => {
+                res.status(500).send({'error': error.message})
+            })
     }
 })
 
 //Removes a category from a product (both id)
 router.delete('/remove-category/:id', async (req, res) => {
-    const decoded = checkToken(req.body.token)
+    const decoded = checkToken(req.headers.authorization)
     if (decoded.role !== 'admin') {
         res.sendStatus(403)
     } else {
         const sql = 'DELETE FROM products_categories WHERE product_id = ? AND category_id = ?'
-        dbQuery(sql, [req.params.id, req.body.category_id]).then(() => {
-            res.sendStatus(200)
-        }).catch((error) => {
-            res.status(500).send({'error': error.message})
-        })
+        dbQuery(sql, [req.params.id, req.body.category_id])
+            .then(() => {
+                res.sendStatus(200)
+            })
+            .catch((error) => {
+                res.status(500).send({'error': error.message})
+            })
     }
 })
 module.exports = router

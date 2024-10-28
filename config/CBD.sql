@@ -44,8 +44,8 @@ CREATE TABLE users
     `password`  TINYTEXT NOT NULL,
 
     `role`      ENUM ('admin', 'user') DEFAULT 'user',
-    `basket`    JSON DEFAULT NULL,
-    `favorites` JSON DEFAULT NULL
+    `basket`    JSON DEFAULT ('[]'),
+    `favorites` JSON DEFAULT ('[]')
 ) ENGINE = InnoDB;
 
 CREATE TABLE orders
